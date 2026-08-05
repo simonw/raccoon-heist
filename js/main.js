@@ -396,6 +396,12 @@ function startNight(n) {
 // ---------------------------------------------------------------- Results
 function showResults(won) {
   state = 'results';
+  if (won) {
+    try {
+      const best = +(localStorage.getItem('rh-best-night') || 0);
+      if (night > best) localStorage.setItem('rh-best-night', String(night));
+    } catch (e) { /* private mode */ }
+  }
   const overlay = document.createElement('div');
   overlay.className = 'overlay';
   const ratio = banked / goal;
@@ -962,6 +968,17 @@ async function ensureWorld() {
 }
 
 ensureWorld();
+
+// show best run on the title screen, if any
+try {
+  const best = +(localStorage.getItem('rh-best-night') || 0);
+  if (best > 0) {
+    const p = document.createElement('p');
+    p.style.cssText = 'margin-top:0.7rem;color:#ffd23f;font-size:0.85rem;z-index:2;font-weight:700;letter-spacing:0.06em;';
+    p.textContent = `🏆 Best run: cleared Night ${best}`;
+    statusEl.parentNode.insertBefore(p, statusEl.nextSibling);
+  }
+} catch (e) { /* private mode */ }
 
 playBtn.addEventListener('click', async () => {
   playBtn.disabled = true;

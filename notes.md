@@ -106,3 +106,24 @@ smell (line of sight is irrelevant — it's all nose, shown by a 👃 over its
 head and barking). It gives up if you open a 17-unit gap. Getting caught
 messages are now source-specific: guard / headlights / hound. Verified
 wander → track → caught with an automated test.
+
+## Final polish
+
+- Best run persists in localStorage and shows on the title screen
+  ("🏆 Best run: cleared Night N").
+- Landscape-phone layout verified (740×360, DPR 2): HUD, joystick and DASH
+  button all clear of each other; title screen crops gracefully.
+
+## Where things ended up
+
+The heist loop: sneak out from the crew's dumpster, grab coins/gems/rings/
+donuts/fish (pizza = 6s speed FRENZY, the golden TV = 120 points but a heavy
+waddle), dodge flashlight cones, the police cruiser's headlights, peeking
+homeowners, a loot-stealing seagull — and from night 3, a scent-tracking
+hound. Bank loot at the dumpster before dawn to clear the night; each night
+raises the goal and adds heat. Ranks: TRASH PANDA / CAT BURGLAR / MASTER OF
+DISGUISE.
+
+All textures + title art were generated with OpenAI gpt-image-2 at build
+time and committed as static assets; the deployed game is fully static
+(vendored Three.js, procedural WebAudio, no runtime API calls).
