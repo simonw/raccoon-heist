@@ -94,12 +94,14 @@ function floatLabel(text, screenX, screenY, color = '#ffd23f') {
 
 // ---------------------------------------------------------------- Renderer
 const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+// set base styles BEFORE setSize — setSize writes inline width/height styles
+// that must not be clobbered (clobbering them breaks high-DPR phones).
+renderer.domElement.style.cssText = 'position:fixed;top:0;left:0;z-index:1;display:block;';
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFShadowMap;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
-renderer.domElement.style.cssText = 'position:fixed;inset:0;z-index:1;display:block;';
 document.body.appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
@@ -133,6 +135,7 @@ let windowEvent = null; // {win, t, circle}
 let windowTimer = 14;
 let crew = [];
 let lastFrame = performance.now();
+let lastDt = 0.016;
 let camShake = 0;
 
 const $ = (id) => document.getElementById(id);
@@ -581,6 +584,8 @@ function updateGuards(dt) {
       if (Math.abs(da) < THREE.MathUtils.degToRad(28)) {
         sees = !losBlocked(g.pos.x, g.pos.z, playerPos.x, playerPos.z);
       }
+      // guards notice a raccoon brushing right past them, cone or not
+      if (dist < 2.4) sees = true;
     }
     if (sees && state === 'playing') {
       const rate = 55 + (1 - dist / 11) * 130;
@@ -786,6 +791,7 @@ function updateCamera(dt) {
 function frame(now) {
   requestAnimationFrame(frame);
   const dt = Math.min(0.05, (now - lastFrame) / 1000);
+  lastDt = dt;
   lastFrame = now;
   if (state === 'title') return;
 
@@ -874,3 +880,30 @@ document.getElementById('music-btn').addEventListener('click', () => {
 });
 
 requestAnimationFrame((n) => { lastFrame = n; requestAnimationFrame(frame); });
+
+// tiny debug/testing hook (also handy in devtools)
+window.__rhScene = scene;
+window.__rhCamera = camera;
+window.__THREE = THREE;
+window.__rh = {
+  get state() { return state; },
+  get banked() { return banked; },
+  get carriedCount() { return carried.length; },
+  get nightTime() { return nightTime; },
+  get guards() { return guards.map((g) => ({ mode: g.mode, alert: g.alert, x: g.pos.x, z: g.pos.z })); },
+  get loot() { return lootItems.map((l) => ({ x: l.x, z: l.z, kind: l.kind })); },
+  teleport(x, z) { playerPos.set(x, 0, z); },
+  debug() {
+    const [sx, sy] = worldToScreen(new THREE.Vector3(playerPos.x, 1, playerPos.z));
+    return {
+      player: playerPos.toArray(),
+      playerScreen: [Math.round(sx), Math.round(sy)],
+      screen: [window.innerWidth, window.innerHeight],
+      cam: camera.position.toArray(),
+      camQuat: camera.quaternion.toArray().map((v) => +v.toFixed(3)),
+      visible: player ? player.group.visible : null,
+      inScene: player ? player.group.parent === scene : null,
+      fps: Math.round(1 / Math.max(0.001, lastDt)),
+    };
+  },
+};

@@ -52,3 +52,18 @@ next; the script tag already points at it.
   plings, alarm, squawk, win/lose jingles. No audio files.
 - Smoke-tested with Playwright + SwiftShader: no JS errors; brightened
   lighting and lowered camera angle after first screenshots read too dark.
+
+## Mobile canvas bug (critical fix)
+
+Playwright device-emulation testing (390×844, deviceScaleFactor 2) caught a
+nasty one: assigning `canvas.style.cssText` AFTER `renderer.setSize()` wiped
+the inline width/height styles Three.js sets, so on any real phone (DPR ≥ 2)
+the canvas rendered at 2× CSS size — you'd only ever see the top-left quarter
+of the game. Desktop tests (DPR 1) masked it completely. Fixed by setting base
+styles before `setSize()`. Verified with a projected-marker test: player now
+lands dead-center on the emulated phone screen.
+
+Also: guards now notice a raccoon that brushes within 2.4 units of them even
+outside the flashlight cone (verified alert → chase → caught in an automated
+test), and added a `window.__rh` debug hook used by the Playwright gameplay
+tests (pickup PASS, banking PASS, chase/caught PASS).
