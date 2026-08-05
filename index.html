@@ -7,6 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0a1024">
 <title>Raccoon Heist</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>🦝</text></svg>">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body {
@@ -43,6 +44,17 @@
     border-radius: 50%;
     background: radial-gradient(circle at 38% 34%, #ffffff, #cfdcff 55%, #93a8d8 100%);
     box-shadow: 0 0 60px 18px rgba(200, 216, 255, 0.35);
+  }
+
+  .title-art {
+    position: absolute; inset: 0;
+    background: url('textures/title-art.jpg') center 30% / cover no-repeat;
+    opacity: 0.55;
+    -webkit-mask-image: linear-gradient(180deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,1) 40%, rgba(0,0,0,0.25) 100%);
+    mask-image: linear-gradient(180deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,1) 40%, rgba(0,0,0,0.25) 100%);
+  }
+  @media (min-aspect-ratio: 4/3) {
+    .title-art { background-position: center 22%; opacity: 0.45; }
   }
 
   .stars { position: absolute; inset: 0; overflow: hidden; }
@@ -139,7 +151,7 @@
 <body>
   <div id="title-screen">
     <div class="stars" id="stars"></div>
-    <div class="moon"></div>
+    <div class="title-art"></div>
     <div class="mask">🦝</div>
     <h1 class="game-title">RACCOON<br><span class="accent">HEIST</span></h1>
     <p class="tagline">Grab the loot &middot; Dodge the law &middot; Trash is treasure</p>

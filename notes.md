@@ -67,3 +67,16 @@ Also: guards now notice a raccoon that brushes within 2.4 units of them even
 outside the flashlight cone (verified alert → chase → caught in an automated
 test), and added a `window.__rh` debug hook used by the Playwright gameplay
 tests (pickup PASS, banking PASS, chase/caught PASS).
+
+## Polish round 1
+
+- Title screen now uses a gpt-image-2 hero illustration (low-poly masked
+  raccoon clutching a glowing coin by a tipped trash can, 1024×1536 →
+  512×768 JPEG) as a masked backdrop behind the CSS title. Removed the CSS
+  moon — the art brings its own.
+- New rare loot: the ⭐ GOLDEN TV 📺 (value 120, spawn weight 0.35). It's
+  heavy — counts as 4 items for the carry-slowdown, so hauling it home is a
+  risk/reward waddle.
+- Win screen now grants heist ranks: TRASH PANDA ⭐ / CAT BURGLAR ⭐⭐ /
+  MASTER OF DISGUISE ⭐⭐⭐.
+- Added 🦝 SVG-emoji favicon (also silences the 404 from tests).

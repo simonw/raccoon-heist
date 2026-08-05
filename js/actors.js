@@ -312,6 +312,22 @@ export function makeLoot(kind) {
       g.add(stone);
       break;
     }
+    case 'tv': {
+      // the legendary golden TV — huge score, heavy to haul
+      mesh = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.6, 0.5), new THREE.MeshLambertMaterial({ color: 0xffd23f, emissive: 0xcc9200, emissiveIntensity: 0.6 }));
+      mesh.position.y = 0.34;
+      const screen = new THREE.Mesh(new THREE.PlaneGeometry(0.6, 0.4), new THREE.MeshLambertMaterial({ color: 0x8fd8ff, emissive: 0x5faccf, emissiveIntensity: 1.2 }));
+      screen.position.set(0, 0.34, 0.26);
+      g.add(screen);
+      const antMat = new THREE.MeshLambertMaterial({ color: 0xffd23f, emissive: 0x997000, emissiveIntensity: 0.5 });
+      for (const s of [-1, 1]) {
+        const ant = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.5, 4), antMat);
+        ant.position.set(0.12 * s, 0.82, 0);
+        ant.rotation.z = -0.5 * s;
+        g.add(ant);
+      }
+      break;
+    }
     default: { // coin
       mesh = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.28, 0.09, 14), new THREE.MeshLambertMaterial({ color: 0xffd23f, emissive: 0xcc9900, emissiveIntensity: 0.75 }));
       mesh.position.y = 0.3;
@@ -328,5 +344,6 @@ export const LOOT_TYPES = {
   donut: { value: 15, label: 'donut', weight: 3 },
   fish:  { value: 20, label: 'fish',  weight: 3 },
   ring:  { value: 50, label: 'ring',  weight: 1 },
-  pizza: { value: 15, label: 'pizza', weight: 2 }, // also triggers FRENZY
+  pizza: { value: 15, label: 'pizza', weight: 2 }, // eaten on pickup — triggers FRENZY
+  tv:    { value: 120, label: 'golden TV', weight: 0.35, heavy: true },
 };

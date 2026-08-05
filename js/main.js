@@ -374,13 +374,14 @@ function showResults(won) {
   const overlay = document.createElement('div');
   overlay.className = 'overlay';
   const ratio = banked / goal;
-  const stars = won ? (ratio >= 2 ? '⭐⭐⭐' : ratio >= 1.4 ? '⭐⭐' : '⭐') : '';
+  const [stars, rank] = ratio >= 2 ? ['⭐⭐⭐', 'MASTER OF DISGUISE'] : ratio >= 1.4 ? ['⭐⭐', 'CAT BURGLAR'] : ['⭐', 'TRASH PANDA'];
   if (won) {
     sfx.win();
     overlay.innerHTML = `
       <h2>NIGHT ${night} CLEAR! 🦝</h2>
       <div class="stars">${stars}</div>
-      <p>The crew banked <b style="color:#ffd23f">${banked}</b> in shiny loot (goal ${goal}).<br>
+      <p><b style="color:#ffd23f">Rank: ${rank}</b><br>
+      The crew banked <b style="color:#ffd23f">${banked}</b> in shiny loot (goal ${goal}).<br>
       Word on the street: an even bigger score tomorrow…</p>
       <button id="next-btn">NIGHT ${night + 1} ➜</button>`;
   } else {
@@ -443,7 +444,8 @@ function updatePlayer(dt) {
   }
   const dashing = now - dashTime < 0.28;
   const frenzy = now < frenzyUntil;
-  const carryPenalty = 1 - Math.min(0.35, carried.length * 0.045);
+  const carryWeight = carried.reduce((s, c) => s + (c.kind === 'tv' ? 4 : 1), 0);
+  const carryPenalty = 1 - Math.min(0.45, carryWeight * 0.045);
   let speed = 7.2 * carryPenalty * (frenzy ? 1.55 : 1) * (dashing ? 2.1 : 1);
 
   const mlen = Math.hypot(mx, mz);
@@ -502,7 +504,11 @@ function updatePlayer(dt) {
       mini.scale.setScalar(0.65);
       player.lootAnchor.add(mini);
       carried.push({ kind: l.kind, value: l.value, mesh: mini });
-      (l.kind === 'coin' ? sfx.coin : l.kind === 'gem' || l.kind === 'ring' ? sfx.gem : sfx.munch)();
+      if (l.kind === 'tv') {
+        toast('📺 THE GOLDEN TV! Haul it home… slowly.', 3000);
+        camShake = Math.max(camShake, 0.25);
+      }
+      (l.kind === 'coin' ? sfx.coin : l.kind === 'gem' || l.kind === 'ring' || l.kind === 'tv' ? sfx.gem : sfx.munch)();
       const [sx, sy] = worldToScreen(tmpV.set(playerPos.x, 1.5, playerPos.z));
       floatLabel(`+${l.value}`, sx, sy);
       updateCarryHUD();
