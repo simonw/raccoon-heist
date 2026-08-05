@@ -39,7 +39,7 @@ css.textContent = `
              font-family: "Trebuchet MS", system-ui, sans-serif; backdrop-filter: blur(4px); padding: 20px; }
   .overlay h2 { font-size: clamp(1.8rem, 8vw, 3.2rem); margin-bottom: 0.4em; text-shadow: 0 4px 20px rgba(120,160,255,0.4); }
   .overlay p { color: #9db4e6; margin-bottom: 1.6em; font-size: clamp(0.95rem, 3.6vw, 1.2rem); line-height: 1.5; }
-  .overlay .stars { font-size: clamp(1.6rem, 7vw, 2.6rem); margin-bottom: 0.5em; letter-spacing: 0.15em; }
+  .overlay .rank-stars { font-size: clamp(1.6rem, 7vw, 2.6rem); margin-bottom: 0.5em; letter-spacing: 0.15em; }
   .overlay button { font-family: inherit; font-size: clamp(1rem, 4vw, 1.3rem); font-weight: 700; padding: 0.8em 2.2em;
              color: #1a1200; background: linear-gradient(180deg, #ffe27a, #ffc31f 60%, #f0a500); border: none;
              border-radius: 999px; box-shadow: 0 5px 0 #8a5d00, 0 10px 24px rgba(255,195,31,0.3); cursor: pointer; }
@@ -136,6 +136,7 @@ let windowTimer = 14;
 let crew = [];
 let lastFrame = performance.now();
 let lastDt = 0.016;
+let dawnWarned = false;
 let camShake = 0;
 
 const $ = (id) => document.getElementById(id);
@@ -340,7 +341,7 @@ async function setupGame() {
 
 function startNight(n) {
   night = n;
-  goal = 150 + (n - 1) * 120;
+  goal = 120 + (n - 1) * 110;
   nightTime = 0;
   banked = 0;
   for (const c of carried) player.lootAnchor.remove(c.mesh);
@@ -355,6 +356,15 @@ function startNight(n) {
   else if (n === 2) { addGuard(routes[0], boost); addGuard(routes[1], boost); }
   else { addGuard(routes[0], boost); addGuard(routes[1], boost); addGuard(routes[2], boost); }
   spawnLoot(16 + n * 4);
+  // reset sky/lighting to deep night (retries can start from a dawn-lit scene)
+  scene.background = new THREE.Color(0x0a1024);
+  scene.fog.color.setHex(0x0a1024);
+  world.ambient.intensity = 1.25;
+  world.ambient.color.setHex(0x4a5c92);
+  world.moonLight.intensity = 1.35;
+  world.moonLight.color.setHex(0xaec4ff);
+  world.hemi.intensity = 0.85;
+  dawnWarned = false;
   carX = -40; carDir = 1;
   seagullTimer = 15 + Math.random() * 15;
   windowTimer = 10 + Math.random() * 12;
@@ -379,7 +389,7 @@ function showResults(won) {
     sfx.win();
     overlay.innerHTML = `
       <h2>NIGHT ${night} CLEAR! 🦝</h2>
-      <div class="stars">${stars}</div>
+      <div class="rank-stars">${stars}</div>
       <p><b style="color:#ffd23f">Rank: ${rank}</b><br>
       The crew banked <b style="color:#ffd23f">${banked}</b> in shiny loot (goal ${goal}).<br>
       Word on the street: an even bigger score tomorrow…</p>
@@ -764,14 +774,20 @@ function updateDawn(dt) {
   // last 30 seconds: sky begins to lighten
   const dawn = Math.max(0, (nightTime - (NIGHT_LEN - 30)) / 30);
   if (dawn > 0) {
-    const sky = new THREE.Color(0x0a1024).lerp(new THREE.Color(0x6a5a7e), dawn);
+    const sky = new THREE.Color(0x0a1024).lerp(new THREE.Color(0x8a6a86), dawn);
     scene.background = sky;
     scene.fog.color = sky;
-    world.ambient.intensity = 0.85 + dawn * 0.9;
-    world.ambient.color.setHex(0x3a4a78).lerp(new THREE.Color(0xcf9a6a), dawn);
-    if (dawn > 0.65 && Math.floor(nightTime * 2) !== Math.floor((nightTime - dt) * 2) && Math.floor(nightTime) % 5 === 0) {
-      // gentle tick reminder handled by bar; skip extra toasts
+    world.ambient.intensity = 1.25 + dawn * 1.4;
+    world.ambient.color.setHex(0x4a5c92).lerp(new THREE.Color(0xe8a070), dawn);
+    world.moonLight.intensity = 1.35 * (1 - dawn * 0.55);
+    world.moonLight.color.setHex(0xaec4ff).lerp(new THREE.Color(0xffc890), dawn);
+    world.hemi.intensity = 0.85 + dawn * 0.5;
+    if (!dawnWarned && dawn > 0.02) {
+      toast('☀️ Dawn is coming — bank what you can!', 2600);
+      dawnWarned = true;
     }
+  } else {
+    dawnWarned = false;
   }
   if (nightTime >= NIGHT_LEN && state === 'playing') {
     showResults(banked >= goal);
@@ -899,6 +915,8 @@ window.__rh = {
   get guards() { return guards.map((g) => ({ mode: g.mode, alert: g.alert, x: g.pos.x, z: g.pos.z })); },
   get loot() { return lootItems.map((l) => ({ x: l.x, z: l.z, kind: l.kind })); },
   teleport(x, z) { playerPos.set(x, 0, z); },
+  setTime(t) { nightTime = t; },
+  addBank(v) { banked += v; $('bank-val').textContent = banked; },
   debug() {
     const [sx, sy] = worldToScreen(new THREE.Vector3(playerPos.x, 1, playerPos.z));
     return {

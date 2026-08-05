@@ -80,3 +80,19 @@ tests (pickup PASS, banking PASS, chase/caught PASS).
 - Win screen now grants heist ranks: TRASH PANDA ⭐ / CAT BURGLAR ⭐⭐ /
   MASTER OF DISGUISE ⭐⭐⭐.
 - Added 🦝 SVG-emoji favicon (also silences the 404 from tests).
+
+## Night-cycle QA round
+
+Automated a full progression test (jump to dawn → win overlay → Night 2 →
+lose overlay). It caught another real bug: the win screen's ⭐ rating div
+used class `stars`, which collided with the title screen's full-screen
+`.stars` CSS — the invisible stretched div swallowed every click on the
+"NIGHT 2 ➜" button. Renamed to `.rank-stars`.
+
+Other changes:
+- Dawn is dramatic now: sky/fog lerp to mauve, ambient warms and brightens,
+  moonlight fades to peach, plus a "Dawn is coming" warning toast.
+- `startNight` resets all sky/lighting state (retrying after a dawn loss used
+  to keep the morning sky).
+- Night 1 goal softened 150 → 120 so a clean first run is winnable;
+  escalation is +110/night.
