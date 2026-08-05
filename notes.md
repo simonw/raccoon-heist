@@ -25,3 +25,30 @@ light-hearted heists, dodging the police, escaping with the loot.
 **Commit 1:** `index.html` title screen — pure CSS night sky, moon, twinkling
 stars, city skyline silhouette, bobbing 🦝, START button. `js/main.js` comes
 next; the script tag already points at it.
+
+## Playable core build
+
+- Vendored `three@0.170` module build into `vendor/` (no CDN at runtime).
+- Generated 7 tileable textures with OpenAI `gpt-image-2` (low quality, 1024px,
+  downscaled to 512px JPEG): grass, siding, fence wood, roof shingles, cracked
+  concrete, trash-can metal, soil. Stylized night palette came out great.
+- `js/actors.js`: procedural low-poly characters — raccoon (bandit mask,
+  striped tail, trotting legs, loot stacks on its back), security guard with
+  flashlight, police car with flashing light bar, seagull, and six loot types.
+- `js/world.js`: the map — three houses with glowing windows, street for the
+  police car, yard fences with sneak gaps, trash cans, trees/bushes, the crew's
+  green dumpster hideout (with glowing eyes inside), moon, stars, fireflies,
+  fog. Also exports collision obstacles + line-of-sight blockers.
+- `js/main.js`: game loop — WASD/joystick movement with collision + dash,
+  auto-pickup loot (max 8 carried, slows you down), bank at the dumpster,
+  guard vision cones with alert build-up → chase → caught (drop half your
+  loot), police headlight sweeps, seagull loot-theft event, homeowner
+  window-peek event, pizza frenzy speed boost, dawn timer with sky lightening,
+  night-by-night escalation (more guards, bigger goals), win/lose overlays
+  with star ratings.
+- `js/controls.js`: dynamic touch joystick (appears where you touch, left 62%
+  of screen) + DASH button; keyboard WASD/arrows + Space.
+- `js/audio.js`: procedural WebAudio — sneaky walking-bass jazz loop, coin/gem
+  plings, alarm, squawk, win/lose jingles. No audio files.
+- Smoke-tested with Playwright + SwiftShader: no JS errors; brightened
+  lighting and lowered camera angle after first screenshots read too dark.
