@@ -2,7 +2,7 @@
 
 Play the game here: https://simonw.github.io/raccoon-heist/
 
-Built with a single prompt using Claude Fable 5 and Claude Code for web. Here's [the exported transcript](https://simonw.github.io/raccoon-heist/).
+Built with a single prompt using Claude Fable 5 and Claude Code for web. Here's [the exported transcript](https://simonw.github.io/raccoon-heist/transcript/).
 
 Prompt, based on [my Tweet from August 2024](https://twitter.com/simonw/status/1555626060384911360):
 
