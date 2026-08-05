@@ -127,3 +127,10 @@ DISGUISE.
 All textures + title art were generated with OpenAI gpt-image-2 at build
 time and committed as static assets; the deployed game is fully static
 (vendored Three.js, procedural WebAudio, no runtime API calls).
+
+## Transcript
+
+Added `transcript/` — this build session's Claude Code transcript rendered to
+HTML with `claude-code-transcripts` (index.html + page-001.html) plus the raw
+`session.jsonl`. Verified the OpenAI API key value (and fragments of it)
+appears nowhere in these files before committing.
