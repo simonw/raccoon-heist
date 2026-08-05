@@ -231,6 +231,66 @@ export function makePoliceCar() {
   };
 }
 
+export function makeDog() {
+  const g = new THREE.Group();
+  const BROWN = 0x8a6440, DARK = 0x5e4128;
+  const body = new THREE.Mesh(new THREE.SphereGeometry(0.42, 10, 8), M(BROWN));
+  body.scale.set(0.9, 0.8, 1.5);
+  body.position.y = 0.55;
+  body.castShadow = true;
+  g.add(body);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.3, 10, 8), M(BROWN));
+  head.position.set(0, 0.85, 0.62);
+  g.add(head);
+  const snout = new THREE.Mesh(new THREE.SphereGeometry(0.16, 8, 6), M(DARK));
+  snout.scale.set(0.9, 0.7, 1.3);
+  snout.position.set(0, 0.76, 0.9);
+  g.add(snout);
+  const nose = new THREE.Mesh(new THREE.SphereGeometry(0.06, 6, 6), M(BLACK));
+  nose.position.set(0, 0.78, 1.08);
+  g.add(nose);
+  for (const s of [-1, 1]) {
+    const ear = new THREE.Mesh(new THREE.SphereGeometry(0.12, 6, 6), M(DARK));
+    ear.scale.set(0.7, 1.3, 0.5);
+    ear.position.set(0.2 * s, 1.08, 0.55);
+    g.add(ear);
+    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.05, 6, 6), M(0x1a1a1a, { emissive: 0x331111 }));
+    eye.position.set(0.13 * s, 0.92, 0.86);
+    g.add(eye);
+  }
+  const tail = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.09, 0.5, 6), M(DARK));
+  tail.position.set(0, 0.8, -0.62);
+  tail.rotation.x = 0.8;
+  g.add(tail);
+  // spiked collar
+  const collar = new THREE.Mesh(new THREE.TorusGeometry(0.22, 0.05, 6, 12), M(0xc0392b));
+  collar.position.set(0, 0.78, 0.5);
+  collar.rotation.x = Math.PI / 2.4;
+  g.add(collar);
+  const legGeo = new THREE.CylinderGeometry(0.07, 0.09, 0.34, 6);
+  const legs = [];
+  for (const [x, z] of [[-0.22, 0.35], [0.22, 0.35], [-0.22, -0.35], [0.22, -0.35]]) {
+    const leg = new THREE.Mesh(legGeo, M(DARK));
+    leg.position.set(x, 0.17, z);
+    g.add(leg);
+    legs.push(leg);
+  }
+  let phase = Math.random() * 10;
+  return {
+    group: g,
+    animate(dt, speed) {
+      phase += dt * (3 + speed * 10);
+      const amp = Math.min(0.6, 0.1 + speed * 0.6);
+      legs[0].rotation.x = Math.sin(phase) * amp;
+      legs[3].rotation.x = Math.sin(phase) * amp;
+      legs[1].rotation.x = -Math.sin(phase) * amp;
+      legs[2].rotation.x = -Math.sin(phase) * amp;
+      tail.rotation.z = Math.sin(phase * 1.5) * 0.4;
+      body.position.y = 0.55 + Math.abs(Math.sin(phase)) * 0.04 * (0.3 + speed);
+    },
+  };
+}
+
 export function makeSeagull() {
   const g = new THREE.Group();
   const body = new THREE.Mesh(new THREE.SphereGeometry(0.32, 10, 8), M(0xf2f4f8));

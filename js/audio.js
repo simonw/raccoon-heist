@@ -69,6 +69,7 @@ export const sfx = {
   win()    { if (!ctx) return; const t = ctx.currentTime; [523, 659, 784, 1047, 784, 1047, 1319].forEach((f, i) => blip(f, t + i * 0.12, 0.25, 'triangle', 0.22)); },
   lose()   { if (!ctx) return; const t = ctx.currentTime; [392, 370, 349, 330].forEach((f, i) => blip(f, t + i * 0.22, 0.35, 'triangle', 0.2)); },
   meow()   { if (!ctx) return; const t = ctx.currentTime; blip(700, t, 0.25, 'sawtooth', 0.1, 250); },
+  bark()   { if (!ctx) return; const t = ctx.currentTime; blip(220, t, 0.09, 'sawtooth', 0.25, 120); blip(190, t + 0.13, 0.11, 'sawtooth', 0.25, 90); noiseBurst(t, 0.07, 0.12, 700); },
 };
 
 // ---------- Sneaky bass groove ----------

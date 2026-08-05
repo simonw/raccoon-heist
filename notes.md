@@ -96,3 +96,13 @@ Other changes:
   to keep the morning sky).
 - Night 1 goal softened 150 → 120 so a clean first run is winnable;
   escalation is +110/night.
+
+## The hound (night 3+)
+
+New escalation: from night 3 the yards get a patrolling guard dog — a low-poly
+brown hound with a spiked red collar and a wagging tail. It wanders between
+random spots, and within 12 units it catches your scent and tracks you by
+smell (line of sight is irrelevant — it's all nose, shown by a 👃 over its
+head and barking). It gives up if you open a 17-unit gap. Getting caught
+messages are now source-specific: guard / headlights / hound. Verified
+wander → track → caught with an automated test.

@@ -3,7 +3,7 @@
 
 import * as THREE from '../vendor/three.module.js';
 import { buildWorld, BOUNDS } from './world.js';
-import { makeRaccoon, makeGuard, makePoliceCar, makeSeagull, makeLoot, LOOT_TYPES } from './actors.js';
+import { makeRaccoon, makeGuard, makePoliceCar, makeSeagull, makeDog, makeLoot, LOOT_TYPES } from './actors.js';
 import { Controls } from './controls.js';
 import { initAudio, resumeAudio, sfx, toggleMusic } from './audio.js';
 
@@ -133,6 +133,7 @@ let seagull = null; // {api, state, target, t, from}
 let seagullTimer = 18;
 let windowEvent = null; // {win, t, circle}
 let windowTimer = 14;
+let dog = null; // {api, pos, mode, wanderTarget, wanderT, barkT, sniff}
 let crew = [];
 let lastFrame = performance.now();
 let lastDt = 0.016;
@@ -356,6 +357,20 @@ function startNight(n) {
   else if (n === 2) { addGuard(routes[0], boost); addGuard(routes[1], boost); }
   else { addGuard(routes[0], boost); addGuard(routes[1], boost); addGuard(routes[2], boost); }
   spawnLoot(16 + n * 4);
+  // night 3+: they bring out the hound — tracks by scent, no flashlight needed
+  if (dog) { scene.remove(dog.api.group); dog.sniff.remove(); dog = null; }
+  if (n >= 3) {
+    const api = makeDog();
+    scene.add(api.group);
+    const sniff = document.createElement('div');
+    sniff.className = 'float-label';
+    sniff.style.transition = 'none';
+    sniff.style.fontSize = '22px';
+    sniff.style.display = 'none';
+    document.body.appendChild(sniff);
+    dog = { api, sniff, pos: new THREE.Vector3(0, 0, -4), angle: 0, mode: 'wander', wanderTarget: new THREE.Vector3(10, 0, 8), wanderT: 0, barkT: 0 };
+    setTimeout(() => toast('🐕 They brought the HOUND tonight. It smells you…', 3400), 3800);
+  }
   // reset sky/lighting to deep night (retries can start from a dawn-lit scene)
   scene.background = new THREE.Color(0x0a1024);
   scene.fog.color.setHex(0x0a1024);
@@ -411,7 +426,7 @@ function showResults(won) {
 }
 
 // ---------------------------------------------------------------- Caught
-function onCaught(guard) {
+function onCaught(source) {
   state = 'caught';
   caughtTimer = 2.0;
   camShake = 0.7;
@@ -430,7 +445,8 @@ function onCaught(guard) {
     lootItems.push({ kind: item.kind, value: item.value, group, x: lx, z: lz, taken: false });
   }
   updateCarryHUD();
-  toast(carried.length ? 'Busted! You dropped some loot! 🚨' : 'Busted! The guard shooed you off! 🚨', 3000);
+  const who = source === 'dog' ? 'The hound ran you off!' : source === 'car' ? 'Caught in the headlights!' : 'The guard shooed you off!';
+  toast('Busted! 🚨 ' + (dropCount ? 'You dropped some loot!' : who), 3000);
   for (const g of guards) { g.alert = 0; g.mode = 'patrol'; }
 }
 
@@ -665,9 +681,69 @@ function updatePoliceCar(dt) {
     if (Math.abs(playerPos.z - world.roadZ) < 4 && ahead > 0 && ahead < 12) {
       for (const g of guards) g.alert = Math.min(100, g.alert + 240 * dt);
       if (Math.hypot(playerPos.x - carX, playerPos.z - world.roadZ) < 3) {
-        onCaught(null);
+        onCaught('car');
       }
     }
+  }
+}
+
+function updateDog(dt) {
+  if (!dog) return;
+  const d = dog;
+  const distToPlayer = Math.hypot(playerPos.x - d.pos.x, playerPos.z - d.pos.z);
+  let speed = 0;
+  if (d.mode === 'wander') {
+    d.wanderT -= dt;
+    const dx = d.wanderTarget.x - d.pos.x, dz = d.wanderTarget.z - d.pos.z;
+    const dist = Math.hypot(dx, dz);
+    if (dist < 1 || d.wanderT <= 0) {
+      const [x, z] = randomLootSpot();
+      d.wanderTarget.set(x, 0, z);
+      d.wanderT = 8 + Math.random() * 6;
+    } else {
+      speed = 1.6;
+      const ta = Math.atan2(dx, dz);
+      let da = ta - d.angle;
+      while (da > Math.PI) da -= Math.PI * 2;
+      while (da < -Math.PI) da += Math.PI * 2;
+      d.angle += da * Math.min(1, dt * 3);
+      d.pos.x += Math.sin(d.angle) * speed * dt;
+      d.pos.z += Math.cos(d.angle) * speed * dt;
+    }
+    if (distToPlayer < 12 && state === 'playing') {
+      d.mode = 'track';
+      sfx.bark();
+      toast('🐕 The hound caught your scent!', 2000);
+    }
+  } else { // track — no line of sight needed, it's all nose
+    if (distToPlayer > 17 || state !== 'playing') {
+      d.mode = 'wander';
+    } else {
+      speed = 3.5;
+      const ta = Math.atan2(playerPos.x - d.pos.x, playerPos.z - d.pos.z);
+      let da = ta - d.angle;
+      while (da > Math.PI) da -= Math.PI * 2;
+      while (da < -Math.PI) da += Math.PI * 2;
+      d.angle += da * Math.min(1, dt * 5);
+      d.pos.x += Math.sin(d.angle) * speed * dt;
+      d.pos.z += Math.cos(d.angle) * speed * dt;
+      d.barkT -= dt;
+      if (d.barkT <= 0) { sfx.bark(); d.barkT = 1.6 + Math.random(); }
+      if (distToPlayer < 1.25 && state === 'playing') onCaught('dog');
+    }
+  }
+  [d.pos.x, d.pos.z] = circleVsObstacles(d.pos.x, d.pos.z, 0.5);
+  d.api.group.position.set(d.pos.x, 0, d.pos.z);
+  d.api.group.rotation.y = d.angle;
+  d.api.animate(dt, speed / 3.5);
+  if (d.mode === 'track') {
+    const [sx, sy] = worldToScreen(tmpV.set(d.pos.x, 1.9, d.pos.z));
+    d.sniff.style.display = 'block';
+    d.sniff.style.left = (sx - 10) + 'px';
+    d.sniff.style.top = (sy - 20) + 'px';
+    d.sniff.textContent = '👃';
+  } else {
+    d.sniff.style.display = 'none';
   }
 }
 
@@ -840,6 +916,7 @@ function frame(now) {
     updatePlayer(dt);
     updateGuards(dt);
     updatePoliceCar(dt);
+    updateDog(dt);
     updateSeagull(dt);
     updateWindowEvent(dt);
     updateDawn(dt);
@@ -847,6 +924,7 @@ function frame(now) {
     caughtTimer -= dt;
     updateGuards(dt * 0.3);
     updatePoliceCar(dt);
+    updateDog(dt * 0.3);
     if (caughtTimer <= 0) {
       playerPos.set(0, 0, 26);
       player.group.position.copy(playerPos);
@@ -916,6 +994,8 @@ window.__rh = {
   get loot() { return lootItems.map((l) => ({ x: l.x, z: l.z, kind: l.kind })); },
   teleport(x, z) { playerPos.set(x, 0, z); },
   setTime(t) { nightTime = t; },
+  get dog() { return dog ? { mode: dog.mode, x: dog.pos.x, z: dog.pos.z } : null; },
+  get night() { return night; },
   addBank(v) { banked += v; $('bank-val').textContent = banked; },
   debug() {
     const [sx, sy] = worldToScreen(new THREE.Vector3(playerPos.x, 1, playerPos.z));
